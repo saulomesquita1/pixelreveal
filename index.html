@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manipulação de Imagem com Animação</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 50px;
+    }
+
+    #output {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2></h2>
+
+  <form id="imageForm">
+    <label for="imageInput"></label>
+    <input type="file" id="imageInput" accept="image/*" required>
+    <br>
+    <br>
+    <label for="pixelNumber">Pixels:</label>
+    <input type="number" id="pixelNumber" required>
+
+    <button type="button" onclick="animatePixels()">Mostrar</button>
+  </form>
+
+  <div id="output"></div>
+
+  <script>
+    var currentPixels = [];
+
+    function processImage() {
+      var imageInput = document.getElementById('imageInput');
+      var pixelNumberInput = document.getElementById('pixelNumber');
+      var outputDiv = document.getElementById('output');
+
+      var file = imageInput.files[0];
+      var pixelNumber = parseInt(pixelNumberInput.value);
+
+      if (file && !isNaN(pixelNumber)) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+          var img = new Image();
+          img.src = e.target.result;
+
+          img.onload = function () {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            // Tornar todos os pixels transparentes
+            for (var i = 0; i < data.length; i += 4) {
+              data[i + 3] = 0;
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Exibir a imagem processada
+            outputDiv.innerHTML = '<h3>Imagem Processada:</h3>';
+            outputDiv.appendChild(canvas);
+
+            // Atualizar a lista de pixels atuais
+            currentPixels = getRandomPixels(data, pixelNumber);
+          };
+        };
+
+        reader.readAsDataURL(file);
+      } else {
+        alert('Por favor, selecione uma imagem e insira um número válido de pixels.');
+      }
+    }
+
+    function getRandomPixels(data, count) {
+      var pixels = [];
+
+      // Criar um array com a posição de cada pixel
+      for (var j = 0; j < data.length; j += 4) {
+        pixels.push(j);
+      }
+
+      // Embaralhar aleatoriamente o array de pixels
+      for (var k = pixels.length - 1; k > 0; k--) {
+        var randomIndex = Math.floor(Math.random() * (k + 1));
+        var temp = pixels[k];
+        pixels[k] = pixels[randomIndex];
+        pixels[randomIndex] = temp;
+      }
+
+      // Retornar os primeiros 'count' pixels
+      return pixels.slice(0, count);
+    }
+
+    function animatePixels() {
+      var imageInput = document.getElementById('imageInput');
+      var pixelNumberInput = document.getElementById('pixelNumber');
+      var outputDiv = document.getElementById('output');
+
+      var file = imageInput.files[0];
+      var newPixelNumber = parseInt(pixelNumberInput.value);
+
+      if (file && !isNaN(newPixelNumber)) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+          var img = new Image();
+          img.src = e.target.result;
+
+          img.onload = function () {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            // Tornar todos os pixels transparentes
+            for (var i = 0; i < data.length; i += 4) {
+              data[i + 3] = 0;
+            }
+
+            // Manter os pixels já exibidos
+            currentPixels.forEach(function (index) {
+              data[index + 3] = 255; // Tornar o canal alpha (transparência) visível
+            });
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Criar um array com a posição de cada pixel
+            var pixels = getRandomPixels(data, Math.abs(newPixelNumber - currentPixels.length));
+
+            // Adicionar ou remover pixels conforme necessário
+            pixels.forEach(function (index) {
+              data[index + 3] = 255; // Tornar o canal alpha (transparência) visível
+            });
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Exibir a imagem processada
+            outputDiv.innerHTML = '<h3></h3>';
+            outputDiv.appendChild(canvas);
+
+            // Atualizar a lista de pixels atuais
+            currentPixels = pixels;
+          };
+        };
+
+        reader.readAsDataURL(file);
+      } else {
+        alert('Por favor, selecione uma imagem e insira um número válido de pixels.');
+      }
+    }
+  </script>
+</body>
+</html>
